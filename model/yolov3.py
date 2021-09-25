@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.utils.tensorboard
 import numpy as np
 import utils.utils
-
+# Detection
 class YOLODetection(nn.Module):
     def __init__(self, anchors, image_size: int, num_classes: int):
         super(YOLODetection, self).__init__()
@@ -122,12 +122,7 @@ class YOLODetection(nn.Module):
         }
         return output, loss_layer
 
-
-
-
-
-
-
+# YOLOv3 Network Structure
 class YOLOv3(nn.Module):
     def __init__(self,image_size:int, num_classes: int):
         super(YOLOv3, self).__init__()
@@ -136,7 +131,7 @@ class YOLOv3(nn.Module):
                  'scale3':[(116,90),(156,198),(373,326)]}
         final_out_channel = 3*(4+1+num_classes)
 
-        self.darknet53=self.make_dakrnet53()
+        self.darknet53=self.make_darknet53()
         self.conv_block3 = self.make_conv_block(1024,512)
         self.conv_final3 = self.make_conv_final(512,final_out_channel)
         self.yolo_layer3 = YOLODetection(anchors['scale3'],image_size,num_classes)
@@ -259,13 +254,101 @@ class YOLOv3(nn.Module):
             self.make_conv(half_channels, in_channels, kernel_size=3, requires_grad=False)
         )
         return block
-
     def make_upsample(self, in_channels: int, out_channels: int, scale_factor: int):
         modules = nn.Sequential(
             self.make_conv(in_channels, out_channels, kernel_size=1, padding=0),
             nn.Upsample(scale_factor=scale_factor, mode='nearest')
         )
         return modules
+
+    # load weight file
+    def load_darknet_weights(self, weights_path: str):
+        with open(weights_path,"rb") as f: #byters 타입으로 반환
+            _ = np.fromfile(f, dtype=np.int32, count=5)
+            weights = np.fromfile(f, dtype=np.float23)
+
+            # darknet53 weights load
+            for key, module in self.darknet53.items():
+                module_type = key.split('_')[0]
+
+                if module_type == 'conv':
+                    ptr = self.load_conv_weights(module[0], weights, ptr)
+                    ptr = self.load_bn_weights(module[1],weights,ptr)
+                elif module_type == 'residual':
+                    for i in range(2):
+                        ptr = self.load_conv_weights(module[i][0, weights, ptr])
+                        ptr = self.load_bn_weights(module[i][1],weights, ptr)
+
+            # YOLOv3 weights load
+            if weights_path.find('yolov3.weights') !=-1:
+                for module in self.conv_block3:
+                    ptr = self.load_conv_weights(module[0],weights,ptr)
+                    ptr = self.load_bn_weights(module[1],weights,ptr)
+
+                ptr = self.load_conv_weights(self.conv_final3[0][0],weights,ptr)
+                ptr = self.load_bn_weights(self.conv_final3[0][1], weights, ptr)
+                ptr = self.load_conv_bias(self.conv_final3[1],weights, ptr)
+                ptr = self.load_conv_weights(self.conv_final13[1],weights, ptr)
+
+                ptr = self.load_bn_weights(self.upsample2[0][1],weights, ptr)
+                ptr = self.load_conv_weights(self.upsample2[0][0], weights, ptr)
+
+                for module in self.conv_block2:
+                    ptr = self.load_conv_weights(module[0],weights,ptr)
+                    ptr = self.load_bn_weights(module[1],weights,ptr)
+
+                ptr = self.load_conv_weights(self.conv_final2[0][0],weights,ptr)
+                ptr = self.load_bn_weights(self.conv_final2[0][1], weights, ptr)
+                ptr = self.load_conv_bias(self.conv_final2[1],weights, ptr)
+                ptr = self.load_conv_weights(self.conv_final12[1],weights, ptr)
+
+                ptr = self.load_bn_weights(self.upsample1[0][1],weights, ptr)
+                ptr = self.load_conv_weights(self.upsample1[0][0], weights, ptr)
+
+                for module in self.conv_block1:
+                    ptr = self.load_bn_weights(module[1], weights,ptr)
+                    ptr = self.load_conv_weights(module[0], weights, ptr)
+                ptr = self.load_bn_weights(self.conv_final1[0][1], weights, ptr)
+                ptr = self.load_conv_weights(self.conv_final1[0][0], weights, ptr)
+                ptr = self.load_conv_bias(self.conv_final1[1],weights,ptr)
+                ptr = self.load_conv_weights(self.conv_final1[1],weights,ptr)
+
+    def load_bn_weights(self,bn_layer,weights,ptr: int):
+        num_bn_biases = bn_layer.bias.numel()
+
+        bn_biases = torch.from_numpy(weights[ptr:ptr+num_bn_biases]).view_as(bn_layer.bias)
+        bn_layer.bias.data.copy_(bn_biases)
+        ptr+=num_bn_biases
+
+        bn_weights = torch.from_numpy(weights[ptr:ptr+num_bn_biases]).view_as(bn_layer.weight)
+        bn_layer.weights.data.copy_(bn_weights)
+        ptr+=num_bn_biases
+
+
+        bn_running_mean = torch.from_numpy(weights[ptr: ptr + num_bn_biases]).view_as(bn_layer.running_mean)
+        bn_layer.running_mean.data.copy_(bn_running_mean)
+        ptr += num_bn_biases
+
+        bn_running_var = torch.from_numpy(weights[ptr: ptr + num_bn_biases]).view_as(bn_layer.running_var)
+        bn_layer.running_var.data.copy_(bn_running_var)
+        ptr += num_bn_biases
+
+        return ptr
+
+    def load_conv_bias(self,conv_layer,weights, ptr:int):
+        num_biases = conv_layer.bias.numel()
+        conv_biases = torch.fron_numpy(weights[ptr:ptr+num_biases]).view_as(conv_layer.bias)
+        conv_layer.bias.data.copy_(conv_biases)
+        ptr += num_biases
+        return ptr
+
+    def load_conv_weights(self,conv_layer, weights,ptr: int):
+        num_weights = conv_layer.weights.numel()# numel : 원소 개수 출력
+        conv_weights = torch.from_numpy(weights[ptr:ptr+num_weights])
+        conv_weights = conv_weights.view_as(conv_layer.weight)
+        conv_layer.weights.data.copy_(conv_weights)
+        ptr +=num_weights
+        return ptr
 
 if __name__ == '__main__':
     model = YOLOv3(image_size=416, num_classes=80)
@@ -276,5 +359,3 @@ if __name__ == '__main__':
     writer = torch.utils.tensorboard.SummaryWriter('../logs')
     writer.add_graph(model, test)
     writer.close()
-
-
