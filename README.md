@@ -23,13 +23,13 @@ Bounding Box Prediction
 Class Prediction
 ----------------
   * Multi Label Classification을 수행하기 위해 softmax가 아닌 sigmoid + Cross Entropy Loss인 binary Cross Entropy를 사용
-  * 즉, 클래스에 대해 softmax를 사용하는 것이나닌 각 클래스에 대해 독립적으로 적용하깅 위해 sigmoid를 사용
+  * 즉, 클래스에 대해 softmax를 사용하는 것이 아닌 각 클래스에 대해 독립적으로 적용하기 위해 sigmoid를 사용
 
 Prediction Across Scales
 ------------------------
 ![image](https://user-images.githubusercontent.com/61686244/134756625-61c9250a-ec08-412c-a56f-fbc0f5c9bda6.png)
 
-  * 416x416 크기의 이미지를 네트워크에 입려갛여 특징 맵의 크기가 52x52, 26x26, 13x13이 되는 층의 특징 맵을 추출하여 이용
+  * 416x416 크기의 이미지를 네트워크에 입력하여 특징 맵의 크기가 52x52, 26x26, 13x13이 되는 층의 특징 맵을 추출하여 이용
   * 각 scale의 특징 맵의 출력 수가 셀의 bbox 갯수 x (bbox offset + objetcness score + 클래스 갯수) = 3x(4+1+80) = 255 되도록 1x1 Conv를 통해 채널 수 조정 
   * COCO dataset 기준 k-means clustering를 이용하여 bounding box prior를 설정, 9 cluster, 3 scale
   * (10x13), (16x30), (33x23), (30x61), (62x45), (59x119), (116x90), (156x198), (373x326)
