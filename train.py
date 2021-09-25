@@ -141,13 +141,3 @@ for epoch in tqdm.tqdm(range(args.epoch), desc='Epoch'):
     os.makedirs(save_dir, exist_ok=True)
     dataset_name = os.path.split(args.data_config)[-1].split('.')[0]
     torch.ave(model.state_dict(), os.path.join(save_dir, 'yolov3_{}_{}.pth'.format(dataset_name, epoch)))
-
-
-
-
-
-
-
-
-
-
