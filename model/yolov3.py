@@ -64,6 +64,65 @@ class YOLODetection(nn.Module):
         if targets is None:
             return output, 0
 
+        iou_scores, class_mask, obj_mask, no_obj_mask, tx, ty, tw, th, tcls, tconf = utils.utils.build_targets(
+            pred_boxes = pred_boxes,
+            pred_cls = pred_cls,
+            target = targets,
+            anchors = scaled_anchors,
+            ignore_thres = self.ignore_thres,
+            device = device
+        )
+
+        # bbox의 offset에 관한 loss
+        loss_x = self.mse_loss(cx[obj_mask],tx[obj_mask])
+        loss_y = self.mse_loss(cy[obj_mask],ty[obj_mask])
+        loss_w = self.mse_loss(w[obj_mask],tw[obj_mask])
+        loss_h = self.mse_loss(h[obj_mask], th[obj_mask])
+        loss_bbox = loss_x + loss_y + loss_w + loss_h
+
+        # 객체의 유무에 관한 loss
+        loss_conf_obj = self.bce_loss(pred_conf[obj_mask], tconf(obj_mask))
+        loss_conf_no_obj = self.bce_loss(pred_conf(no_obj_mask),tconf[no_obj_mask])
+        loss_conf = self.obj_scale * loss_conf_obj + self.no_obj_scale * loss_conf_no_obj
+
+        # classification 관한 loss
+        loss_cls = self.bce_loss(pred_cls[obj_mask], tcls[obj_mask])
+
+        #total
+        loss_layer = loss_bbox + loss_conf + loss_cls
+
+        # 평가
+        conf50 = (pred_conf >0.5).float()
+        iou50 = (iou_scores > 0.5).float()
+        iou75 = (iou_scores > 0.75).float()
+        detected_mask = conf50*class_mask*tconf
+        cls_acc = 100*class_mask[obj_mask].mean()
+        conf_obj = pred_conf[obj_mask].mean()
+        conf_no_obj = pred_conf[no_obj_mask].mean()
+        precision = torch.sum(iou50 * detected_mask) / (conf50.sum() + 1e-16)
+        recall50 = torch.sum(iou50 * detected_mask) / (obj_mask.sum() + 1e-16)
+        recall75 = torch.sum(iou75 * detected_mask) / (obj_mask.sum() + 1e-16)
+
+        # cpu로 loss 이동
+        self.metrics = {
+            "loss_x": loss_x.detach().cpu().item(),
+            "loss_y": loss_y.detach().cpu().item(),
+            "loss_w": loss_w.detach().cpu().item(),
+            "loss_h": loss_h.detach().cpu().item(),
+            "loss_bbox": loss_bbox.detach().cpu().item(),
+            "loss_conf": loss_conf.detach().cpu().item(),
+            "loss_cls": loss_cls.detach().cpu().item(),
+            "loss_layer": loss_layer.detach().cpu().item(),
+            "cls_acc": cls_acc.detach().cpu().item(),
+            "conf_ojb":conf_obj.detach().cpu().item(),
+            "conf_no_obj":conf_no_obj.detach().cpu().item(),
+            "precision":precision.detach().cpu().item(),
+            "recall50":recall50.detach().cpu().item(),
+            "recall175":recall75.detach().cpu().item()
+        }
+        return output, loss_layer
+
+
 
 
 
