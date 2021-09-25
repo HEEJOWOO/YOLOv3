@@ -11,11 +11,11 @@ Bounding Box Prediction
   * t_x, t_y, t_w, t_h -> b_x, b_y, b_w, b_h 변형에 대한 추가 설명
     - YOLO와 Anchor box를 동시에 사용할때 tx, ty는 제한된 범위가 없기 때문에 anchor box는 이미지 내의 임의의 지점에 위치할 수 있다는 문제가 발생
     - 최적화된 값을 찾기 까지 오랜시간이 걸려 모델은 초기에 불안정하게 됨 
-    - 이러한 문제를 해결하기 위해 YOLO의 방식을 사용하여 grid cell에 상대적인 위치 좌표를 예측하는 방법을 선택, sigmoid를 사용하여 0~1사이의 값을 갖도록 변경
-    - 예측하는 버위가 정해짐으로써 네트워크는 안정적으로 학습을 진행할 수 있음
-    - Dimension Clustering를 통해 최적의 prior를 선태갛고, anchor box 중심부 좌표를 예측함으로 recall 값이 YOLOv2에서 5%정도 향상
+    - grid cell에 상대적인 위치 좌표를 예측하는 방법을 선택, sigmoid를 사용하여 0~1사이의 값을 갖도록 변경
+    - 예측하는 범위가 정해짐으로써 네트워크는 안정적으로 학습을 진행할 수 있음
+    - Dimension Clustering를 통해 최적의 prior를 선택하고, anchor box 중심부 좌표를 예측함으로 recall 값이 YOLOv2에서 5%정도 향상
 
-  * bounding box마다 objectness score를 logistic function을 이용하여 구함
+  * bounding box마다 objectness score를 logistic function(데이터가 어떤 범주에 속할 확률을 0에서 1 사이의 값으로 예측하고 그 확률에 따라 가능성이 더 높은 범주에 속하는 것으로 분류해주는 것)을 이용하여 구함
   * anchor box와 GT box와의 IoU 값이 가장 높은 box만 선택
   * low, medium, high resolution에서 각 3개의 bounding box를 만들어냄 총 9개의 bounding box중 IoU가 가장 높은것을 선택하여 objectness score를 1로 설정해줌
 
