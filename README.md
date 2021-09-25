@@ -65,3 +65,8 @@ YOLOv3 학습 과정
   - Bounding Box의 Multi class Binary Cross Entropy
  4) 추론시 non maximum suppresion 이용 
   - 비 최대 억제는 object detector가 예측한 bounding box 중에서 정확한 bounding box를 선택하도록 하는 기법 (1) 동일한 클래스에대해 내림차순으로 confidence를 정렬 (2) 가장 confidence가 높은 바운딩 박스와 IoU가 일정 임계값 이상인 바운딩 박스는 동일한 물체를 검출 했다고 판단하여 지움
+
+
+YOLOv3 구현
+-----------
+ * Ubuntu 18.04 LTS, CUDA 11.0, CUDNN 8.0.4
