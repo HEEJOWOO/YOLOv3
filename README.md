@@ -70,3 +70,4 @@ YOLOv3 학습 과정
 YOLOv3 구현
 -----------
  * Ubuntu 18.04 LTS, CUDA 11.0, CUDNN 8.0.4
+ * 구현중 업데이트 예정
