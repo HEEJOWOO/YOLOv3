@@ -53,4 +53,15 @@ YOLO 시리즈별 bounding box 갯수 비교
 |YOLOv3|10647|(52x52x3)+(26x26x3)+(13x13x3), 416x416|
 
 
+YOLOv3 학습 과정
+----------------
 
+ 1) 416x416 이미지를 DarkNet 53에 입력하여 52x52, 26x26, 13x13 특징 맵 추출
+ 2) Fully convolutional Network를 통해 특징 피라미드 설계, 52x52x255, 26x26x255, 13x13x255
+ 3) 손실함수를 통한 학습 
+  - bbox offset : MSE 
+  - 객체를 예측하도록 할당된 bbox의 objectness score의 Binary Cross Entropy
+  - rorcpfmf dPcmrgkehfhr gkfekdehlwl dksgdms bbox의 no objectness score의 Binary Cross Entropy
+  - Bounding Box의 Multi class Binary Cross Entropy
+ 4) 추론시 non maximum suppresion 이용 
+  - 비 최대 억제는 object detector가 예측한 bounding box 중에서 정확한 bounding box를 선택하도록 하는 기법 (1) 동일한 클래스에대해 내림차순으로 confidence를 정렬 (2) 가장 confidence가 높은 바운딩 박스와 IoU가 일정 임계값 이상인 바운딩 박스는 동일한 물체를 검출 했다고 판단하여 지움
