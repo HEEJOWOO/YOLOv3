@@ -15,11 +15,7 @@ Bounding Box Prediction
     - 예측하는 버위가 정해짐으로써 네트워크는 안정적으로 학습을 진행할 수 있음
     - Dimension Clustering를 통해 최적의 prior를 선태갛고, anchor box 중심부 좌표를 예측함으로 recall 값이 YOLOv2에서 5%정도 향상
 
-![image](https://user-images.githubusercontent.com/61686244/134756398-422b4c1b-441e-44f4-b993-8aa04243c377.png)
-
-  * YOLOv3에서는 위 공식처럼 거꾸로 적용시켜 t_*로 변형 시킨 후 L1 loss를 통해 학습시키는 방식을 선택 
-
-  * bounding box마다 objectness score를 logistic function을 이요하여 구함
+  * bounding box마다 objectness score를 logistic function을 이용하여 구함
   * anchor box와 GT box와의 IoU 값이 가장 높은 box만 선택
   * low, medium, high resolution에서 각 3개의 bounding box를 만들어냄 총 9개의 bounding box중 IoU가 가장 높은것을 선택하여 objectness score를 1로 설정해줌
 
