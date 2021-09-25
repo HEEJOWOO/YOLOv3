@@ -43,6 +43,14 @@ Feature Extractor
   * YOLOv2에서 backbone으로 사용되었던 Darknet19 대신 YOLOv3에서는 residual connection을 사용하는 Darknet53을 backbone network로 사용
   * RestNet 101보다 1.5배 빠르며, ResNet 152와 비슷한 성능을 보이지만 2배 이상 빠름 
 
+YOLO 시리즈별 bounding box 갯수 비교
+------------------------------------
+
+|-|bbox|Element|
+|-|----|-------|
+|YOLOv1|98|7x7, 2 bbox, 448x448|
+|YOLOv2|845|13x13, 5 anchor box, 416x416|
+|YOLOv3|10647|(52x52x3)+(26x26x3)+(13x13x3), 416x416|
 
 
 
